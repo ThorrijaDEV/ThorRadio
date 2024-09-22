@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio 24/7</title>
+    <title>ThorPlayer</title>
     <style>
         #player {
             display: none; /* Oculta el video */
@@ -19,33 +19,94 @@
             padding: 10px 20px;
             font-size: 16px;
         }
+        #info {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #thumbnail {
+            margin-right: 20px;
+        }
+        #thumbnail img {
+            width: 100px;
+            height: auto;
+        }
+        #genero-actual {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>Radio 24/7</h1>
+    <h1>ThorPlayer</h1>
+    <h1>Tu radio 24/7</h1>
     <div id="player"></div>
     <div id="controls">
-        <button id="play">Play</button>
-        <button id="pause">Pause</button>
-        <button id="next">Next</button>
+        <button id="Play">Inciar</button>
+        <button id="Pause">Pausar</button>
+        <button id="Next">Siguiente</button>
     </div>
+    <div id="info">
+        <div id="thumbnail"></div>
+        <div id="title"></div>
+    </div>
+    <div id="genero-actual">Género actual: <span id="genero"></span></div> <!-- Mostrar el género aquí -->
     <script>
-        // Tu clave de API de YouTube
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
 
-        // Función para buscar videos de música
-        async function buscarVideos() {
+        const generos = [
+            { genero: 'pop', subgenero: 'pop rock' },
+            { genero: 'rock', subgenero: 'hard rock' },
+            { genero: 'jazz', subgenero: 'smooth jazz' },
+            { genero: 'clásica', subgenero: 'barroca' },
+            { genero: 'electrónica', subgenero: 'house' },
+            { genero: 'hip hop', subgenero: 'rap' },
+            { genero: 'reggae', subgenero: 'dancehall' },
+            { genero: 'country', subgenero: 'bluegrass' },
+            { genero: 'blues', subgenero: 'rhythm and blues' },
+            { genero: 'latina', subgenero: 'salsa' },
+            { genero: 'metal', subgenero: 'heavy metal' },
+            { genero: 'folk', subgenero: 'folk rock' },
+            { genero: 'funk', subgenero: 'disco' },
+            { genero: 'gospel', subgenero: 'contemporary gospel' },
+            { genero: 'soul', subgenero: 'neo soul' },
+            { genero: 'punk', subgenero: 'punk rock' },
+            { genero: 'techno', subgenero: 'minimal techno' },
+            { genero: 'trance', subgenero: 'progressive trance' },
+            { genero: 'dubstep', subgenero: 'brostep' },
+            { genero: 'ambient', subgenero: 'dark ambient' },
+            { genero: 'indie', subgenero: 'indie pop' },
+            { genero: 'k-pop', subgenero: 'k-hip hop' },
+            { genero: 'afrobeat', subgenero: 'afro house' },
+            { genero: 'swing', subgenero: 'big band' },
+            { genero: 'tango', subgenero: 'nuevo tango' },
+            { genero: 'opera', subgenero: 'bel canto' },
+            { genero: 'ska', subgenero: 'ska punk' },
+            { genero: 'grunge', subgenero: 'post-grunge' },
+            { genero: 'new wave', subgenero: 'synth-pop' },
+            { genero: 'reggaeton', subgenero: 'latin trap' },
+            { genero: 'trap', subgenero: 'trap latino' },
+            { genero: 'house', subgenero: 'deep house' },
+            { genero: 'drum and bass', subgenero: 'liquid funk' },
+            { genero: 'garage', subgenero: 'garage rock' },
+            { genero: 'emo', subgenero: 'emo pop' },
+            { genero: 'industrial', subgenero: 'industrial metal' },
+            { genero: 'world', subgenero: 'world fusion' }
+        ];
+        let generoActual = 0;
+
+        async function buscarVideos(genero, subgenero) {
             try {
-                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=música&key=${apiKey}&maxResults=50`);
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items.map(item => item.id.videoId);
+                return datos.items;
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
             }
         }
 
-        // Carga la API de IFrame de YouTube
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -54,20 +115,40 @@
         var player;
         var videos = [];
 
-        // Esta función es llamada cuando la API de YouTube IFrame está lista
         async function onYouTubeIframeAPIReady() {
-            videos = await buscarVideos();
+            const { genero, subgenero } = generos[generoActual];
+            videos = await buscarVideos(genero, subgenero);
+            actualizarGenero(genero, subgenero); // Actualizar género al inicio
+            reproducirVideoAleatorio();
+            setInterval(cambiarGenero, 2 * 60 * 60 * 1000); // Cambia el género cada 2 horas
+        }
+
+        function cambiarGenero() {
+            generoActual = (generoActual + 1) % generos.length;
+            const { genero, subgenero } = generos[generoActual];
+            buscarVideos(genero, subgenero).then(nuevosVideos => {
+                videos = nuevosVideos;
+                actualizarGenero(genero, subgenero); // Actualiza el género en pantalla
+                reproducirVideoAleatorio();
+            });
         }
 
         function reproducirVideoAleatorio() {
             const indiceAleatorio = Math.floor(Math.random() * videos.length);
-            const videoId = videos[indiceAleatorio];
+            const video = videos[indiceAleatorio];
+            const videoId = video.id.videoId;
+            const title = video.snippet.title;
+            const thumbnailUrl = video.snippet.thumbnails.default.url;
+
+            document.getElementById('title').innerText = title;
+            document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+
             if (player) {
                 player.loadVideoById(videoId);
             } else {
                 player = new YT.Player('player', {
-                    height: '0', // Oculta el video
-                    width: '0',  // Oculta el video
+                    height: '0',
+                    width: '0',
                     videoId: videoId,
                     events: {
                         'onStateChange': onPlayerStateChange
@@ -79,27 +160,27 @@
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
                 reproducirVideoAleatorio();
+            } else if (event.data === YT.PlayerState.PLAYING) {
+                const videoData = player.getVideoData();
+                if (videoData.title.toLowerCase().includes('ad')) {
+                    player.setPlaybackRate(1.25);
+                } else {
+                    player.setPlaybackRate(1);
+                }
             }
         }
 
-        document.getElementById('play').addEventListener('click', async () => {
-            // Asegurarse de que los videos hayan sido cargados antes de reproducir
-            if (videos.length === 0) {
-                videos = await buscarVideos();
-            }
+        // Actualiza el elemento HTML con el género actual
+        function actualizarGenero(genero, subgenero) {
+            document.getElementById('genero').innerText = `${genero} (${subgenero})`;
+        }
 
-            // Si el reproductor no está inicializado, crear uno
-            if (!player) {
-                reproducirVideoAleatorio();
-            } else {
-                player.playVideo();
-            }
+        document.getElementById('play').addEventListener('click', () => {
+            player.playVideo();
         });
 
         document.getElementById('pause').addEventListener('click', () => {
-            if (player) {
-                player.pauseVideo();
-            }
+            player.pauseVideo();
         });
 
         document.getElementById('next').addEventListener('click', () => {
