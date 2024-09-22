@@ -163,7 +163,7 @@
             } else if (event.data === YT.PlayerState.PLAYING) {
                 const videoData = player.getVideoData();
                 if (videoData.title.toLowerCase().includes('ad')) {
-                    player.setPlaybackRate(1.75);
+                    player.setPlaybackRate(1.25);
                 } else {
                     player.setPlaybackRate(1);
                 }
