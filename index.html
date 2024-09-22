@@ -31,6 +31,11 @@
             width: 100px;
             height: auto;
         }
+        #genero-actual {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -45,11 +50,10 @@
         <div id="thumbnail"></div>
         <div id="title"></div>
     </div>
+    <div id="genero-actual">Género actual: <span id="genero"></span></div> <!-- Mostrar el género aquí -->
     <script>
-        // Tu clave de API de YouTube
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
 
-        // Lista de géneros y subgéneros de música
         const generos = [
             { genero: 'pop', subgenero: 'pop rock' },
             { genero: 'rock', subgenero: 'hard rock' },
@@ -91,7 +95,6 @@
         ];
         let generoActual = 0;
 
-        // Función para buscar videos de música
         async function buscarVideos(genero, subgenero) {
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
@@ -103,7 +106,6 @@
             }
         }
 
-        // Carga la API de IFrame de YouTube
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -115,6 +117,7 @@
         async function onYouTubeIframeAPIReady() {
             const { genero, subgenero } = generos[generoActual];
             videos = await buscarVideos(genero, subgenero);
+            actualizarGenero(genero, subgenero); // Actualizar género al inicio
             reproducirVideoAleatorio();
             setInterval(cambiarGenero, 2 * 60 * 60 * 1000); // Cambia el género cada 2 horas
         }
@@ -124,6 +127,7 @@
             const { genero, subgenero } = generos[generoActual];
             buscarVideos(genero, subgenero).then(nuevosVideos => {
                 videos = nuevosVideos;
+                actualizarGenero(genero, subgenero); // Actualiza el género en pantalla
                 reproducirVideoAleatorio();
             });
         }
@@ -142,8 +146,8 @@
                 player.loadVideoById(videoId);
             } else {
                 player = new YT.Player('player', {
-                    height: '0', // Oculta el video
-                    width: '0',  // Oculta el video
+                    height: '0',
+                    width: '0',
                     videoId: videoId,
                     events: {
                         'onStateChange': onPlayerStateChange
@@ -158,11 +162,16 @@
             } else if (event.data === YT.PlayerState.PLAYING) {
                 const videoData = player.getVideoData();
                 if (videoData.title.toLowerCase().includes('ad')) {
-                    player.setPlaybackRate(1.75); // Aumenta la velocidad a 1.75x durante anuncios
+                    player.setPlaybackRate(1.75);
                 } else {
-                    player.setPlaybackRate(1); // Velocidad normal para otros videos
+                    player.setPlaybackRate(1);
                 }
             }
+        }
+
+        // Actualiza el elemento HTML con el género actual
+        function actualizarGenero(genero, subgenero) {
+            document.getElementById('genero').innerText = `${genero} (${subgenero})`;
         }
 
         document.getElementById('play').addEventListener('click', () => {
