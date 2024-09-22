@@ -19,6 +19,18 @@
             padding: 10px 20px;
             font-size: 16px;
         }
+        #info {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #thumbnail {
+            margin-right: 20px;
+        }
+        #thumbnail img {
+            width: 100px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -29,6 +41,10 @@
         <button id="pause">Pause</button>
         <button id="next">Next</button>
     </div>
+    <div id="info">
+        <div id="thumbnail"></div>
+        <div id="title"></div>
+    </div>
     <script>
         // Tu clave de API de YouTube
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
@@ -38,7 +54,7 @@
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=música&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items.map(item => item.id.videoId);
+                return datos.items;
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
@@ -61,7 +77,14 @@
 
         function reproducirVideoAleatorio() {
             const indiceAleatorio = Math.floor(Math.random() * videos.length);
-            const videoId = videos[indiceAleatorio];
+            const video = videos[indiceAleatorio];
+            const videoId = video.id.videoId;
+            const title = video.snippet.title;
+            const thumbnailUrl = video.snippet.thumbnails.default.url;
+
+            document.getElementById('title').innerText = title;
+            document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+
             if (player) {
                 player.loadVideoById(videoId);
             } else {
