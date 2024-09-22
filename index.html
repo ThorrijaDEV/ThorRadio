@@ -4,10 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio 24/7</title>
+    <style>
+        #player {
+            display: none; /* Oculta el video */
+        }
+        #controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
     <h1>Radio 24/7</h1>
     <div id="player"></div>
+    <div id="controls">
+        <button id="play">Play</button>
+        <button id="pause">Pause</button>
+        <button id="next">Next</button>
+    </div>
     <script>
         // Tu clave de API de YouTube
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
@@ -45,8 +66,8 @@
                 player.loadVideoById(videoId);
             } else {
                 player = new YT.Player('player', {
-                    height: '360',
-                    width: '640',
+                    height: '0', // Oculta el video
+                    width: '0',  // Oculta el video
                     videoId: videoId,
                     events: {
                         'onStateChange': onPlayerStateChange
@@ -60,6 +81,18 @@
                 reproducirVideoAleatorio();
             }
         }
+
+        document.getElementById('play').addEventListener('click', () => {
+            player.playVideo();
+        });
+
+        document.getElementById('pause').addEventListener('click', () => {
+            player.pauseVideo();
+        });
+
+        document.getElementById('next').addEventListener('click', () => {
+            reproducirVideoAleatorio();
+        });
     </script>
 </body>
 </html>
