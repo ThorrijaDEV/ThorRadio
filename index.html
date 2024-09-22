@@ -14,9 +14,14 @@
 
         // Función para buscar videos de música
         async function buscarVideos() {
-            const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=música&key=${apiKey}&maxResults=50`);
-            const datos = await respuesta.json();
-            return datos.items.map(item => item.id.videoId);
+            try {
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=música&key=${apiKey}&maxResults=50`);
+                const datos = await respuesta.json();
+                return datos.items.map(item => item.id.videoId);
+            } catch (error) {
+                console.error('Error al buscar videos:', error);
+                return [];
+            }
         }
 
         // Carga la API de IFrame de YouTube
