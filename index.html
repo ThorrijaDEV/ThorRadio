@@ -120,7 +120,7 @@
             videos = await buscarVideos(genero, subgenero);
             actualizarGenero(genero, subgenero); // Actualizar género al inicio
             reproducirVideoAleatorio();
-            setInterval(cambiarGenero, 10 * 60 * 1000); // Cambia el género cada 10 minutos
+            setInterval(cambiarGenero, 2 * 60 * 60 * 1000); // Cambia el género cada 2 horas
         }
 
         function cambiarGenero() {
