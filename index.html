@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio 24/7</title>
+</head>
+<body>
+    <h1>Radio 24/7</h1>
+    <div id="player"></div>
+    <script>
+        // Tu clave de API de YouTube
+        const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
+
+        // Función para buscar videos de música
+        async function buscarVideos() {
+            const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=música&key=${apiKey}&maxResults=50`);
+            const datos = await respuesta.json();
+            return datos.items.map(item => item.id.videoId);
+        }
+
+        // Carga la API de IFrame de YouTube
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        var videos = [];
+
+        async function onYouTubeIframeAPIReady() {
+            videos = await buscarVideos();
+            reproducirVideoAleatorio();
+        }
+
+        function reproducirVideoAleatorio() {
+            const indiceAleatorio = Math.floor(Math.random() * videos.length);
+            const videoId = videos[indiceAleatorio];
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('player', {
+                    height: '360',
+                    width: '640',
+                    videoId: videoId,
+                    events: {
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                reproducirVideoAleatorio();
+            }
+        }
+    </script>
+</body>
+</html>
