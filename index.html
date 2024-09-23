@@ -147,7 +147,7 @@
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music")); // Filtrar solo música
+                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music"));
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
@@ -172,7 +172,7 @@
                 const datos = await respuesta.json();
                 currentPlaylist = datos.items;
                 isPlayingFromPlaylist = true;
-                currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
+                currentSongIndex = 0;
                 document.getElementById('song-list').innerHTML = currentPlaylist.map(song => `<li>${song.snippet.title}</li>`).join('');
                 document.getElementById('playlist-songs').style.display = 'block';
                 reproducirCancionDesdePlaylist(currentSongIndex);
@@ -187,7 +187,7 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            cambiarGenero(); // Cargar el primer género al inicio
+            cambiarGenero();
         }
 
         function cambiarGenero() {
@@ -235,11 +235,11 @@
                     if (currentSongIndex < currentPlaylist.length) {
                         reproducirCancionDesdePlaylist(currentSongIndex);
                     } else {
-                        currentSongIndex = 0; // Reiniciar al final
+                        currentSongIndex = 0;
                         reproducirCancionDesdePlaylist(currentSongIndex);
                     }
                 } else {
-                    cambiarGenero(); // Cambiar de video al finalizar si no hay playlist
+                    cambiarGenero();
                 }
             }
         }
@@ -301,6 +301,32 @@
             const url = document.getElementById('playlist-url').value;
             if (url) {
                 await cargarPlaylist(url);
+            }
+        });
+
+        document.getElementById('play').addEventListener('click', () => {
+            if (player) {
+                player.playVideo();
+            }
+        });
+
+        document.getElementById('pause').addEventListener('click', () => {
+            if (player) {
+                player.pauseVideo();
+            }
+        });
+
+        document.getElementById('next').addEventListener('click', () => {
+            if (isPlayingFromPlaylist) {
+                currentSongIndex++;
+                if (currentSongIndex < currentPlaylist.length) {
+                    reproducirCancionDesdePlaylist(currentSongIndex);
+                } else {
+                    currentSongIndex = 0;
+                    reproducirCancionDesdePlaylist(currentSongIndex);
+                }
+            } else {
+                cambiarGenero();
             }
         });
 
