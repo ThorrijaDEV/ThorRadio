@@ -212,6 +212,7 @@
             buscarVideos(genero, subgenero).then(videos => {
                 reproducirVideoAleatorio(videos);
             });
+            document.getElementById('genero').innerText = genero; // Actualizar el género actual
         }
 
         function reproducirVideoAleatorio(videos) {
@@ -293,6 +294,12 @@
                     li.innerText = cancion.snippet.title;
                     li.onclick = () => {
                         const videoId = cancion.snippet.resourceId.videoId;
+                        const title = cancion.snippet.title;
+                        const thumbnailUrl = cancion.snippet.thumbnails.default.url;
+
+                        document.getElementById('title').innerText = title;
+                        document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+
                         if (player) {
                             player.loadVideoById(videoId);
                         } else {
