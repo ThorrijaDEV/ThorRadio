@@ -148,7 +148,7 @@
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music")); // Filtrar solo música
+                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music"));
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
