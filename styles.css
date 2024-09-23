@@ -1,0 +1,92 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    transition: background-image 0.5s;
+}
+
+h1 {
+    text-align: center;
+}
+
+#fondo-url {
+    display: block;
+    margin: 20px auto;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+#controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 50%;
+    background-color: rgba(128, 0, 128, 0.9); /* Morado oscuro */
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: rgba(128, 0, 128, 1);
+}
+
+#info {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+#thumbnail {
+    margin-right: 20px;
+}
+
+#thumbnail img {
+    width: 100px;
+    height: auto;
+}
+
+#title {
+    color: red; /* Color rojo para el título */
+    font-size: 18px;
+}
+
+#linea-reproduccion {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+#progress-bar {
+    width: 80%;
+}
+
+#genero-actual {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#playlist-songs {
+    background-color: rgba(0, 0, 128, 0.9); /* Azul oscuro */
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    color: white;
+}
+
+input[type="text"], select {
+    margin: 20px;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+}
