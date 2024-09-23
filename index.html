@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThorPlayer</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Añadido para incluir el CSS -->
+    <link rel="stylesheet" href="styles.css">
     <style>
         #player {
             display: none; /* Oculta el video */
@@ -190,18 +190,21 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            cambiarGenero(); // Cargar el primer género al inicio
+            cargarListaGeneros(); // Cargar lista de géneros al inicio
         }
 
-        function cambiarGenero() {
+        async function cambiarGenero() {
             const { genero, subgenero } = generos[generoActual];
-            buscarVideos(genero, subgenero).then(videos => {
-                reproducirVideoAleatorio(videos);
-                document.getElementById('genero').innerText = `${genero} (${subgenero})`;
-            });
+            const videos = await buscarVideos(genero, subgenero);
+            reproducirVideoAleatorio(videos);
+            document.getElementById('genero').innerText = `${genero} (${subgenero})`;
         }
 
         function reproducirVideoAleatorio(videos) {
+            if (videos.length === 0) {
+                console.error('No hay videos disponibles para este género.');
+                return;
+            }
             const videoAleatorio = videos[Math.floor(Math.random() * videos.length)];
             const videoId = videoAleatorio.id.videoId;
             const title = videoAleatorio.snippet.title;
@@ -231,13 +234,7 @@
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
-                currentSongIndex++;
-                if (isPlayingFromPlaylist && currentSongIndex < currentPlaylist.length) {
-                    reproducirCancionDesdePlaylist(currentSongIndex);
-                } else {
-                    currentSongIndex = 0;
-                    cambiarGenero(); // Reiniciar al siguiente género si se acaba la lista
-                }
+                cambiarGenero(); // Cambiar a un nuevo video del mismo género al terminar
             }
         }
 
