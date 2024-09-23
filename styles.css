@@ -1,11 +1,12 @@
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f0f0f0;
+    background-color: #f9f9f9; /* Color pastel claro */
     transition: background-image 0.5s;
 }
 
 h1 {
     text-align: center;
+    color: #555; /* Color gris suave para el encabezado */
 }
 
 #fondo-url {
@@ -14,6 +15,7 @@ h1 {
     padding: 10px;
     font-size: 16px;
     border-radius: 5px;
+    background-color: #e0e0e0; /* Color pastel suave */
 }
 
 #controls {
@@ -29,15 +31,15 @@ button {
     font-size: 16px;
     border: none;
     border-radius: 50%;
-    background-color: rgba(128, 0, 128, 0.9); /* Morado oscuro */
-    color: white;
+    background-color: rgba(173, 127, 255, 0.9); /* Morado pastel */
+    color: #fff;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: rgba(128, 0, 128, 1);
+    background-color: rgba(173, 127, 255, 1);
 }
 
 #info {
@@ -56,7 +58,7 @@ button:hover {
 }
 
 #title {
-    color: red; /* Color rojo para el título */
+    color: #ff6b6b; /* Color rojo suave */
     font-size: 18px;
 }
 
@@ -77,11 +79,11 @@ button:hover {
 }
 
 #playlist-songs {
-    background-color: rgba(0, 0, 128, 0.9); /* Azul oscuro */
+    background-color: rgba(173, 216, 230, 0.9); /* Azul pastel */
     border-radius: 10px;
     padding: 20px;
     margin-top: 20px;
-    color: white;
+    color: #333; /* Color de texto gris oscuro */
 }
 
 input[type="text"], select {
@@ -89,4 +91,5 @@ input[type="text"], select {
     padding: 10px;
     font-size: 16px;
     border-radius: 5px;
+    background-color: #f0f8ff; /* Color pastel claro */
 }
