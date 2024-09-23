@@ -147,7 +147,7 @@
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music"));
+                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music")); // Filtrar solo música
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
@@ -172,8 +172,10 @@
                 const datos = await respuesta.json();
                 currentPlaylist = datos.items;
                 isPlayingFromPlaylist = true;
-                currentSongIndex = 0;
-                document.getElementById('song-list').innerHTML = currentPlaylist.map(song => `<li>${song.snippet.title}</li>`).join('');
+                currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
+                document.getElementById('song-list').innerHTML = currentPlaylist.map((cancion, index) => 
+                    `<li><a href="#" onclick="reproducirCancionDesdePlaylist(${index})">${cancion.snippet.title}</a></li>`
+                ).join('');
                 document.getElementById('playlist-songs').style.display = 'block';
                 reproducirCancionDesdePlaylist(currentSongIndex);
             } catch (error) {
@@ -187,7 +189,7 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            cambiarGenero();
+            cambiarGenero(); // Cargar el primer género al inicio
         }
 
         function cambiarGenero() {
@@ -199,28 +201,26 @@
         }
 
         function reproducirVideoAleatorio(videos) {
-            if (videos.length > 0) {
-                const videoIndex = Math.floor(Math.random() * videos.length);
-                const videoId = videos[videoIndex].id.videoId;
-                const title = videos[videoIndex].snippet.title;
-                const thumbnailUrl = videos[videoIndex].snippet.thumbnails.default.url;
+            const videoAleatorio = videos[Math.floor(Math.random() * videos.length)];
+            const videoId = videoAleatorio.id.videoId;
+            const title = videoAleatorio.snippet.title;
+            const thumbnailUrl = videoAleatorio.snippet.thumbnails.default.url;
 
-                document.getElementById('title').innerText = title;
-                document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+            document.getElementById('title').innerText = title;
+            document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
 
-                if (player) {
-                    player.loadVideoById(videoId);
-                } else {
-                    player = new YT.Player('player', {
-                        height: '0',
-                        width: '0',
-                        videoId: videoId,
-                        events: {
-                            'onReady': onPlayerReady,
-                            'onStateChange': onPlayerStateChange
-                        }
-                    });
-                }
+            if (player) {
+                player.loadVideoById(videoId);
+            } else {
+                player = new YT.Player('player', {
+                    height: '0',
+                    width: '0',
+                    videoId: videoId,
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
             }
         }
 
@@ -230,16 +230,12 @@
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
-                if (isPlayingFromPlaylist && currentPlaylist.length > 0) {
-                    currentSongIndex++;
-                    if (currentSongIndex < currentPlaylist.length) {
-                        reproducirCancionDesdePlaylist(currentSongIndex);
-                    } else {
-                        currentSongIndex = 0;
-                        reproducirCancionDesdePlaylist(currentSongIndex);
-                    }
+                currentSongIndex++;
+                if (isPlayingFromPlaylist && currentSongIndex < currentPlaylist.length) {
+                    reproducirCancionDesdePlaylist(currentSongIndex);
                 } else {
-                    cambiarGenero();
+                    currentSongIndex = 0;
+                    cambiarGenero(); // Reiniciar al siguiente género si se acaba la lista
                 }
             }
         }
