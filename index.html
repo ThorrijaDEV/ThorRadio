@@ -36,11 +36,28 @@
             font-size: 18px;
             font-weight: bold;
         }
+        #buscar {
+            margin: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #generos-list {
+            margin: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <h1>ThorPlayer</h1>
     <h1>Tu radio 24/7</h1>
+
+    <!-- Buscador -->
+    <input type="text" id="buscar" placeholder="Buscar género o canción...">
+    
+    <!-- Lista de géneros -->
+    <select id="generos-list"></select>
+
     <div id="player"></div>
     <div id="controls">
         <button id="play">Iniciar</button>
@@ -52,6 +69,7 @@
         <div id="title"></div>
     </div>
     <div id="genero-actual">Género actual: <span id="genero"></span></div> <!-- Mostrar el género aquí -->
+
     <script>
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
 
@@ -96,6 +114,24 @@
         ];
         let generoActual = 0;
 
+        // Función para cargar la lista de géneros en el select
+        function cargarListaGeneros() {
+            const lista = document.getElementById('generos-list');
+            generos.forEach((gen, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${gen.genero} (${gen.subgenero})`;
+                lista.appendChild(option);
+            });
+        }
+
+        // Cambiar género desde el select
+        document.getElementById('generos-list').addEventListener('change', (event) => {
+            generoActual = event.target.value;
+            cambiarGenero();
+        });
+
+        // Función para buscar videos en YouTube
         async function buscarVideos(genero, subgenero) {
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
@@ -118,7 +154,7 @@
         async function onYouTubeIframeAPIReady() {
             const { genero, subgenero } = generos[generoActual];
             videos = await buscarVideos(genero, subgenero);
-            actualizarGenero(genero, subgenero); // Actualizar género al inicio
+            actualizarGenero(genero, subgenero);
             reproducirVideoAleatorio();
             setInterval(cambiarGenero, 10 * 60 * 1000); // Cambia el género cada 10 minutos
         }
@@ -128,7 +164,7 @@
             const { genero, subgenero } = generos[generoActual];
             buscarVideos(genero, subgenero).then(nuevosVideos => {
                 videos = nuevosVideos;
-                actualizarGenero(genero, subgenero); // Actualiza el género en pantalla
+                actualizarGenero(genero, subgenero);
                 reproducirVideoAleatorio();
             });
         }
@@ -160,13 +196,6 @@
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
                 reproducirVideoAleatorio();
-            } else if (event.data === YT.PlayerState.PLAYING) {
-                const videoData = player.getVideoData();
-                if (videoData.title.toLowerCase().includes('ad')) {
-                    player.setPlaybackRate(1.25);
-                } else {
-                    player.setPlaybackRate(1);
-                }
             }
         }
 
@@ -174,6 +203,21 @@
         function actualizarGenero(genero, subgenero) {
             document.getElementById('genero').innerText = `${genero} (${subgenero})`;
         }
+
+        // Buscador de géneros
+        document.getElementById('buscar').addEventListener('input', (event) => {
+            const query = event.target.value.toLowerCase();
+            const lista = document.getElementById('generos-list');
+            lista.innerHTML = ''; // Limpiar la lista
+            generos.forEach((gen, index) => {
+                if (gen.genero.toLowerCase().includes(query) || gen.subgenero.toLowerCase().includes(query)) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${gen.genero} (${gen.subgenero})`;
+                    lista.appendChild(option);
+                }
+            });
+        });
 
         document.getElementById('play').addEventListener('click', () => {
             player.playVideo();
@@ -186,6 +230,9 @@
         document.getElementById('next').addEventListener('click', () => {
             reproducirVideoAleatorio();
         });
+
+        // Cargar lista de géneros al cargar la página
+        cargarListaGeneros();
     </script>
 </body>
 </html>
