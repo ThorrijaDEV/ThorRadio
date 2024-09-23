@@ -136,10 +136,10 @@
             cambiarGenero();
         });
 
-        // Función para buscar videos en YouTube
+        // Función para buscar videos musicales en YouTube
         async function buscarVideos(genero, subgenero) {
             try {
-                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50&videoCategoryId=10`);
                 const datos = await respuesta.json();
                 return datos.items;
             } catch (error) {
@@ -151,7 +151,7 @@
         // Función para buscar una canción específica en YouTube
         async function buscarCancion(query) {
             try {
-                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=1`);
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=1&videoCategoryId=10`);
                 const datos = await respuesta.json();
                 return datos.items.length > 0 ? datos.items[0] : null;
             } catch (error) {
