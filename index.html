@@ -116,17 +116,19 @@
         // Función para cargar la lista de géneros en el select
         function cargarListaGeneros() {
             const lista = document.getElementById('generos-list');
+            lista.innerHTML = ''; // Limpiar la lista antes de cargarla
             generos.forEach((gen, index) => {
                 const option = document.createElement('option');
                 option.value = index;
                 option.textContent = `${gen.genero} (${gen.subgenero})`;
                 lista.appendChild(option);
             });
+            lista.value = generoActual; // Asegurarse de que el valor sea el correcto
         }
 
         // Cambiar género desde el select
         document.getElementById('generos-list').addEventListener('change', (event) => {
-            generoActual = event.target.value;
+            generoActual = parseInt(event.target.value); // Asegurarse de convertir el valor a número
             cambiarGenero();
         });
 
@@ -171,7 +173,6 @@
         }
 
         function cambiarGenero() {
-            generoActual = (generoActual + 1) % generos.length;
             const { genero, subgenero } = generos[generoActual];
             buscarVideos(genero, subgenero).then(nuevosVideos => {
                 videos = nuevosVideos;
@@ -181,6 +182,8 @@
         }
 
         function reproducirVideoAleatorio() {
+            if (videos.length === 0) return; // Si no hay videos, no hacer nada
+
             const indiceAleatorio = Math.floor(Math.random() * videos.length);
             const video = videos[indiceAleatorio];
             const videoId = video.id.videoId;
