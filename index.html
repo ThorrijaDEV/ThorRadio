@@ -70,9 +70,9 @@
 
     <input type="text" id="playlist-url" placeholder="Introducir URL de la playlist...">
     <button id="cargar-playlist-btn">Cargar Playlist</button>
-    <ul id="song-list"></ul>
     <div id="playlist-songs">
         <h2>Lista de Canciones</h2>
+        <ul id="song-list"></ul>
     </div>
 
     <script>
@@ -125,7 +125,6 @@
         let currentSongIndex = 0;
         let isPlayingFromPlaylist = false;
         let player;
-        let isPlayerReady = false;
 
         function cargarListaGeneros() {
             const lista = document.getElementById('generos-list');
@@ -171,12 +170,14 @@
                 const playlistId = url.split('list=')[1];
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
+                currentPlaylist = datos.items;
                 isPlayingFromPlaylist = true;
                 currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
-                return datos.items;
+                document.getElementById('song-list').innerHTML = currentPlaylist.map(song => `<li>${song.snippet.title}</li>`).join('');
+                document.getElementById('playlist-songs').style.display = 'block';
+                reproducirCancionDesdePlaylist(currentSongIndex);
             } catch (error) {
                 console.error('Error al cargar la playlist:', error);
-                return [];
             }
         }
 
@@ -185,18 +186,16 @@
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        async function onYouTubeIframeAPIReady() {
-            const { genero, subgenero } = generos[generoActual];
-            const videos = await buscarVideos(genero, subgenero);
-            reproducirVideoAleatorio(videos);
+        function onYouTubeIframeAPIReady() {
+            cambiarGenero(); // Cargar el primer género al inicio
         }
 
         function cambiarGenero() {
             const { genero, subgenero } = generos[generoActual];
             buscarVideos(genero, subgenero).then(videos => {
                 reproducirVideoAleatorio(videos);
+                document.getElementById('genero').innerText = `${genero} (${subgenero})`;
             });
-            document.getElementById('genero').innerText = genero;
         }
 
         function reproducirVideoAleatorio(videos) {
@@ -226,20 +225,17 @@
         }
 
         function onPlayerReady(event) {
-            isPlayerReady = true;
             event.target.playVideo();
         }
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
                 if (isPlayingFromPlaylist && currentPlaylist.length > 0) {
-                    // Si hay una playlist, cargar el siguiente video
                     currentSongIndex++;
                     if (currentSongIndex < currentPlaylist.length) {
                         reproducirCancionDesdePlaylist(currentSongIndex);
                     } else {
-                        // Reiniciar el índice si llegamos al final de la playlist
-                        currentSongIndex = 0;
+                        currentSongIndex = 0; // Reiniciar al final
                         reproducirCancionDesdePlaylist(currentSongIndex);
                     }
                 } else {
@@ -272,7 +268,6 @@
             }
         }
 
-        // Evento para el botón de buscar canción
         document.getElementById('buscar-cancion-btn').addEventListener('click', async () => {
             const query = document.getElementById('buscar-cancion').value;
             if (query) {
@@ -302,14 +297,10 @@
             }
         });
 
-        // Evento para el botón de cargar playlist
         document.getElementById('cargar-playlist-btn').addEventListener('click', async () => {
             const url = document.getElementById('playlist-url').value;
             if (url) {
-                currentPlaylist = await cargarPlaylist(url);
-                currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
-                reproducirCancionDesdePlaylist(currentSongIndex);
-                document.getElementById('playlist-songs').style.display = 'block';
+                await cargarPlaylist(url);
             }
         });
 
