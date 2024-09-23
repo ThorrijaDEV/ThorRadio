@@ -67,7 +67,7 @@
         <div id="thumbnail"></div>
         <div id="title"></div>
     </div>
-    <div id="genero-actual">Género actual: <span id="genero"></span></div> <!-- Mostrar el género aquí -->
+    <div id="genero-actual">Género actual: <span id="genero"></span></div>
 
     <script>
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
@@ -243,6 +243,13 @@
                 }
             } else {
                 alert('No se encontró ninguna canción.');
+            }
+        });
+
+        // Evento para el botón de pausa
+        document.getElementById('pause').addEventListener('click', () => {
+            if (player) {
+                player.pauseVideo();
             }
         });
 
