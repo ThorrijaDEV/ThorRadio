@@ -42,12 +42,8 @@
             font-size: 16px;
         }
         #playlist-songs {
-            display: none; /* Oculta la lista de canciones hasta que se introduzca un enlace */
+            display: none;
             margin-top: 20px;
-        }
-        #song-list {
-            list-style: none;
-            padding: 0;
         }
     </style>
 </head>
@@ -55,24 +51,10 @@
     <h1>ThorPlayer</h1>
     <h1>Tu radio 24/7</h1>
 
-    <!-- Buscador de géneros -->
     <input type="text" id="buscar-genero" placeholder="Buscar género...">
-    
-    <!-- Lista de géneros -->
     <select id="generos-list"></select>
-
-    <!-- Buscador de canciones -->
     <input type="text" id="buscar-cancion" placeholder="Buscar canción en YouTube...">
     <button id="buscar-cancion-btn">Buscar canción</button>
-
-    <!-- Campo para URL de la playlist -->
-    <input type="text" id="playlist-url" placeholder="Introduce URL de la playlist de YouTube...">
-    <button id="cargar-playlist-btn">Cargar Playlist</button>
-
-    <div id="playlist-songs">
-        <h2>Canciones de la Playlist</h2>
-        <ul id="song-list"></ul>
-    </div>
 
     <div id="player"></div>
     <div id="controls">
@@ -85,6 +67,13 @@
         <div id="title"></div>
     </div>
     <div id="genero-actual">Género actual: <span id="genero"></span></div>
+
+    <input type="text" id="playlist-url" placeholder="Introducir URL de la playlist...">
+    <button id="cargar-playlist-btn">Cargar Playlist</button>
+    <ul id="song-list"></ul>
+    <div id="playlist-songs">
+        <h2>Lista de Canciones</h2>
+    </div>
 
     <script>
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
@@ -127,54 +116,48 @@
             { genero: 'emo', subgenero: 'emo pop' },
             { genero: 'industrial', subgenero: 'industrial metal' },
             { genero: 'world', subgenero: 'world fusion' },
-            { genero: 'ruso', subgenero: 'música soviética' },
-            { genero: 'japonés', subgenero: 'música de los 80s y 90s' },
-            { genero: 'ANRI y Miki Matsubara', subgenero: 'música de ANRI y Miki Matsubara' }
+            { genero: 'ANRI', subgenero: 'música de ANRI' },
+            { genero: 'Miki Matsubara', subgenero: 'música de Miki Matsubara' }
         ];
-        let generoActual = 0;
-        let isPlayerReady = false;
-        let player;
 
-        // Función para cargar la lista de géneros en el select
+        let generoActual = 0;
+        let currentPlaylist = [];
+        let currentSongIndex = 0;
+        let isPlayingFromPlaylist = false;
+        let player;
+        let isPlayerReady = false;
+
         function cargarListaGeneros() {
             const lista = document.getElementById('generos-list');
-            lista.innerHTML = ''; // Limpiar la lista antes de cargarla
+            lista.innerHTML = '';
             generos.forEach((gen, index) => {
                 const option = document.createElement('option');
                 option.value = index;
                 option.textContent = `${gen.genero} (${gen.subgenero})`;
                 lista.appendChild(option);
             });
-            lista.value = generoActual; // Asegurarse de que el valor sea el correcto
+            lista.value = generoActual;
         }
 
-        // Cambiar género desde el select
         document.getElementById('generos-list').addEventListener('change', (event) => {
-            generoActual = parseInt(event.target.value); // Asegurarse de convertir el valor a número
+            generoActual = parseInt(event.target.value);
             cambiarGenero();
         });
 
-        // Función para buscar videos musicales en YouTube
         async function buscarVideos(genero, subgenero) {
-            let query = `${genero} ${subgenero}`;
-            if (genero === 'ANRI y Miki Matsubara') {
-                query = 'ANRI Miki Matsubara'; // Busca específicamente por sus nombres
-            }
-
             try {
-                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=50&videoCategoryId=10`);
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items;
+                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music")); // Filtrar solo música
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
             }
         }
 
-        // Función para buscar una canción específica en YouTube
         async function buscarCancion(query) {
             try {
-                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=1&videoCategoryId=10`);
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=1`);
                 const datos = await respuesta.json();
                 return datos.items.length > 0 ? datos.items[0] : null;
             } catch (error) {
@@ -183,12 +166,13 @@
             }
         }
 
-        // Función para cargar canciones desde una playlist
         async function cargarPlaylist(url) {
-            const playlistId = url.split('list=')[1].split('&')[0]; // Extraer el ID de la playlist
             try {
+                const playlistId = url.split('list=')[1];
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
+                isPlayingFromPlaylist = true;
+                currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
                 return datos.items;
             } catch (error) {
                 console.error('Error al cargar la playlist:', error);
@@ -212,17 +196,63 @@
             buscarVideos(genero, subgenero).then(videos => {
                 reproducirVideoAleatorio(videos);
             });
-            document.getElementById('genero').innerText = genero; // Actualizar el género actual
+            document.getElementById('genero').innerText = genero;
         }
 
         function reproducirVideoAleatorio(videos) {
-            if (videos.length === 0) return; // Si no hay videos, no hacer nada
+            if (videos.length > 0) {
+                const videoIndex = Math.floor(Math.random() * videos.length);
+                const videoId = videos[videoIndex].id.videoId;
+                const title = videos[videoIndex].snippet.title;
+                const thumbnailUrl = videos[videoIndex].snippet.thumbnails.default.url;
 
-            const indiceAleatorio = Math.floor(Math.random() * videos.length);
-            const video = videos[indiceAleatorio];
-            const videoId = video.id.videoId;
-            const title = video.snippet.title;
-            const thumbnailUrl = video.snippet.thumbnails.default.url;
+                document.getElementById('title').innerText = title;
+                document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('player', {
+                        height: '0',
+                        width: '0',
+                        videoId: videoId,
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onStateChange': onPlayerStateChange
+                        }
+                    });
+                }
+            }
+        }
+
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                if (isPlayingFromPlaylist && currentPlaylist.length > 0) {
+                    // Si hay una playlist, cargar el siguiente video
+                    currentSongIndex++;
+                    if (currentSongIndex < currentPlaylist.length) {
+                        reproducirCancionDesdePlaylist(currentSongIndex);
+                    } else {
+                        // Reiniciar el índice si llegamos al final de la playlist
+                        currentSongIndex = 0;
+                        reproducirCancionDesdePlaylist(currentSongIndex);
+                    }
+                } else {
+                    cambiarGenero(); // Cambiar de video al finalizar si no hay playlist
+                }
+            }
+        }
+
+        function reproducirCancionDesdePlaylist(index) {
+            const cancion = currentPlaylist[index];
+            const videoId = cancion.snippet.resourceId.videoId;
+            const title = cancion.snippet.title;
+            const thumbnailUrl = cancion.snippet.thumbnails.default.url;
 
             document.getElementById('title').innerText = title;
             document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
@@ -242,43 +272,33 @@
             }
         }
 
-        function onPlayerReady(event) {
-            isPlayerReady = true;
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.ENDED) {
-                cambiarGenero(); // Cambiar de video al finalizar
-            }
-        }
-
-        // Evento para el botón de búsqueda de canción
+        // Evento para el botón de buscar canción
         document.getElementById('buscar-cancion-btn').addEventListener('click', async () => {
             const query = document.getElementById('buscar-cancion').value;
-            const cancion = await buscarCancion(query);
-            if (cancion) {
-                const videoId = cancion.id.videoId;
-                const title = cancion.snippet.title;
-                const thumbnailUrl = cancion.snippet.thumbnails.default.url;
+            if (query) {
+                const cancion = await buscarCancion(query);
+                if (cancion) {
+                    const videoId = cancion.id.videoId;
+                    const title = cancion.snippet.title;
+                    const thumbnailUrl = cancion.snippet.thumbnails.default.url;
 
-                document.getElementById('title').innerText = title;
-                document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+                    document.getElementById('title').innerText = title;
+                    document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
 
-                if (player) {
-                    player.loadVideoById(videoId);
-                } else {
-                    player = new YT.Player('player', {
-                        height: '0',
-                        width: '0',
-                        videoId: videoId,
-                        events: {
-                            'onReady': onPlayerReady,
-                            'onStateChange': onPlayerStateChange
-                        }
-                    });
+                    if (player) {
+                        player.loadVideoById(videoId);
+                    } else {
+                        player = new YT.Player('player', {
+                            height: '0',
+                            width: '0',
+                            videoId: videoId,
+                            events: {
+                                'onReady': onPlayerReady,
+                                'onStateChange': onPlayerStateChange
+                            }
+                        });
+                    }
                 }
-            } else {
-                alert('No se encontró ninguna canción.');
             }
         });
 
@@ -286,64 +306,13 @@
         document.getElementById('cargar-playlist-btn').addEventListener('click', async () => {
             const url = document.getElementById('playlist-url').value;
             if (url) {
-                const canciones = await cargarPlaylist(url);
-                const songList = document.getElementById('song-list');
-                songList.innerHTML = ''; // Limpiar la lista de canciones
-                canciones.forEach(cancion => {
-                    const li = document.createElement('li');
-                    li.innerText = cancion.snippet.title;
-                    li.onclick = () => {
-                        const videoId = cancion.snippet.resourceId.videoId;
-                        const title = cancion.snippet.title;
-                        const thumbnailUrl = cancion.snippet.thumbnails.default.url;
-
-                        document.getElementById('title').innerText = title;
-                        document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
-
-                        if (player) {
-                            player.loadVideoById(videoId);
-                        } else {
-                            player = new YT.Player('player', {
-                                height: '0',
-                                width: '0',
-                                videoId: videoId,
-                                events: {
-                                    'onReady': onPlayerReady,
-                                    'onStateChange': onPlayerStateChange
-                                }
-                            });
-                        }
-                    };
-                    songList.appendChild(li);
-                });
-                document.getElementById('playlist-songs').style.display = 'block'; // Mostrar la lista de canciones
-            } else {
-                alert('Por favor, introduce una URL válida.');
+                currentPlaylist = await cargarPlaylist(url);
+                currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
+                reproducirCancionDesdePlaylist(currentSongIndex);
+                document.getElementById('playlist-songs').style.display = 'block';
             }
         });
 
-        // Evento para el botón de pausa
-        document.getElementById('pause').addEventListener('click', () => {
-            if (player && isPlayerReady) {
-                player.pauseVideo();
-            }
-        });
-
-        // Evento para el botón de iniciar
-        document.getElementById('play').addEventListener('click', () => {
-            if (player && isPlayerReady) {
-                player.playVideo();
-            }
-        });
-
-        // Evento para el botón de siguiente
-        document.getElementById('next').addEventListener('click', async () => {
-            const { genero, subgenero } = generos[generoActual];
-            const videos = await buscarVideos(genero, subgenero);
-            reproducirVideoAleatorio(videos);
-        });
-
-        // Cargar lista de géneros al iniciar
         cargarListaGeneros();
     </script>
 </body>
