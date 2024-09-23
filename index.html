@@ -73,48 +73,49 @@
         const apiKey = 'AIzaSyDlDBcOeQZZy1jbJEvBChrcpkxSRPLSufE';
 
         const generos = [
-    { genero: 'pop', subgenero: 'pop rock' },
-    { genero: 'rock', subgenero: 'hard rock' },
-    { genero: 'jazz', subgenero: 'smooth jazz' },
-    { genero: 'clásica', subgenero: 'barroca' },
-    { genero: 'electrónica', subgenero: 'house' },
-    { genero: 'hip hop', subgenero: 'rap' },
-    { genero: 'reggae', subgenero: 'dancehall' },
-    { genero: 'country', subgenero: 'bluegrass' },
-    { genero: 'blues', subgenero: 'rhythm and blues' },
-    { genero: 'latina', subgenero: 'salsa' },
-    { genero: 'metal', subgenero: 'heavy metal' },
-    { genero: 'folk', subgenero: 'folk rock' },
-    { genero: 'funk', subgenero: 'disco' },
-    { genero: 'gospel', subgenero: 'contemporary gospel' },
-    { genero: 'soul', subgenero: 'neo soul' },
-    { genero: 'punk', subgenero: 'punk rock' },
-    { genero: 'techno', subgenero: 'minimal techno' },
-    { genero: 'trance', subgenero: 'progressive trance' },
-    { genero: 'dubstep', subgenero: 'brostep' },
-    { genero: 'ambient', subgenero: 'dark ambient' },
-    { genero: 'indie', subgenero: 'indie pop' },
-    { genero: 'k-pop', subgenero: 'k-hip hop' },
-    { genero: 'afrobeat', subgenero: 'afro house' },
-    { genero: 'swing', subgenero: 'big band' },
-    { genero: 'tango', subgenero: 'nuevo tango' },
-    { genero: 'opera', subgenero: 'bel canto' },
-    { genero: 'ska', subgenero: 'ska punk' },
-    { genero: 'grunge', subgenero: 'post-grunge' },
-    { genero: 'new wave', subgenero: 'synth-pop' },
-    { genero: 'reggaeton', subgenero: 'latin trap' },
-    { genero: 'trap', subgenero: 'trap latino' },
-    { genero: 'house', subgenero: 'deep house' },
-    { genero: 'drum and bass', subgenero: 'liquid funk' },
-    { genero: 'garage', subgenero: 'garage rock' },
-    { genero: 'emo', subgenero: 'emo pop' },
-    { genero: 'industrial', subgenero: 'industrial metal' },
-    { genero: 'world', subgenero: 'world fusion' },
-    { genero: 'ruso', subgenero: 'música soviética' }, 
-    { genero: 'japonés', subgenero: 'música de los 80s y 90s' }
-    { genero: 'japonesa', subgenero: 'música de ANRI o de Miki Matsubara' }, 
-];
+            { genero: 'pop', subgenero: 'pop rock' },
+            { genero: 'rock', subgenero: 'hard rock' },
+            { genero: 'jazz', subgenero: 'smooth jazz' },
+            { genero: 'clásica', subgenero: 'barroca' },
+            { genero: 'electrónica', subgenero: 'house' },
+            { genero: 'hip hop', subgenero: 'rap' },
+            { genero: 'reggae', subgenero: 'dancehall' },
+            { genero: 'country', subgenero: 'bluegrass' },
+            { genero: 'blues', subgenero: 'rhythm and blues' },
+            { genero: 'latina', subgenero: 'salsa' },
+            { genero: 'metal', subgenero: 'heavy metal' },
+            { genero: 'folk', subgenero: 'folk rock' },
+            { genero: 'funk', subgenero: 'disco' },
+            { genero: 'gospel', subgenero: 'contemporary gospel' },
+            { genero: 'soul', subgenero: 'neo soul' },
+            { genero: 'punk', subgenero: 'punk rock' },
+            { genero: 'techno', subgenero: 'minimal techno' },
+            { genero: 'trance', subgenero: 'progressive trance' },
+            { genero: 'dubstep', subgenero: 'brostep' },
+            { genero: 'ambient', subgenero: 'dark ambient' },
+            { genero: 'indie', subgenero: 'indie pop' },
+            { genero: 'k-pop', subgenero: 'k-hip hop' },
+            { genero: 'afrobeat', subgenero: 'afro house' },
+            { genero: 'swing', subgenero: 'big band' },
+            { genero: 'tango', subgenero: 'nuevo tango' },
+            { genero: 'opera', subgenero: 'bel canto' },
+            { genero: 'ska', subgenero: 'ska punk' },
+            { genero: 'grunge', subgenero: 'post-grunge' },
+            { genero: 'new wave', subgenero: 'synth-pop' },
+            { genero: 'reggaeton', subgenero: 'latin trap' },
+            { genero: 'trap', subgenero: 'trap latino' },
+            { genero: 'house', subgenero: 'deep house' },
+            { genero: 'drum and bass', subgenero: 'liquid funk' },
+            { genero: 'garage', subgenero: 'garage rock' },
+            { genero: 'emo', subgenero: 'emo pop' },
+            { genero: 'industrial', subgenero: 'industrial metal' },
+            { genero: 'world', subgenero: 'world fusion' },
+            { genero: 'ruso', subgenero: 'música soviética' }, // Nueva entrada
+            { genero: 'japonés', subgenero: 'música de los 80s y 90s' }, // Nueva entrada
+            { genero: 'ANRI y Miki Matsubara', subgenero: 'city pop' } // Nueva entrada específica
+        ];
         let generoActual = 0;
+        let isPlayerReady = false;
 
         // Función para cargar la lista de géneros en el select
         function cargarListaGeneros() {
@@ -204,10 +205,15 @@
                     width: '0',
                     videoId: videoId,
                     events: {
+                        'onReady': onPlayerReady,
                         'onStateChange': onPlayerStateChange
                     }
                 });
             }
+        }
+
+        function onPlayerReady(event) {
+            isPlayerReady = true;
         }
 
         function onPlayerStateChange(event) {
@@ -240,6 +246,7 @@
                         width: '0',
                         videoId: videoId,
                         events: {
+                            'onReady': onPlayerReady,
                             'onStateChange': onPlayerStateChange
                         }
                     });
@@ -251,7 +258,7 @@
 
         // Evento para el botón de pausa
         document.getElementById('pause').addEventListener('click', () => {
-            if (player) {
+            if (player && isPlayerReady) {
                 player.pauseVideo();
             }
         });
