@@ -133,6 +133,7 @@
         ];
         let generoActual = 0;
         let isPlayerReady = false;
+        let player;
 
         // Función para cargar la lista de géneros en el select
         function cargarListaGeneros() {
@@ -200,27 +201,20 @@
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        var player;
-        var videos = [];
-
         async function onYouTubeIframeAPIReady() {
             const { genero, subgenero } = generos[generoActual];
-            videos = await buscarVideos(genero, subgenero);
-            actualizarGenero(genero, subgenero);
-            reproducirVideoAleatorio();
-            setInterval(cambiarGenero, 10 * 60 * 1000); // Cambia el género cada 10 minutos
+            const videos = await buscarVideos(genero, subgenero);
+            reproducirVideoAleatorio(videos);
         }
 
         function cambiarGenero() {
             const { genero, subgenero } = generos[generoActual];
-            buscarVideos(genero, subgenero).then(nuevosVideos => {
-                videos = nuevosVideos;
-                actualizarGenero(genero, subgenero);
-                reproducirVideoAleatorio();
+            buscarVideos(genero, subgenero).then(videos => {
+                reproducirVideoAleatorio(videos);
             });
         }
 
-        function reproducirVideoAleatorio() {
+        function reproducirVideoAleatorio(videos) {
             if (videos.length === 0) return; // Si no hay videos, no hacer nada
 
             const indiceAleatorio = Math.floor(Math.random() * videos.length);
@@ -253,12 +247,8 @@
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
-                reproducirVideoAleatorio();
+                cambiarGenero(); // Cambiar de video al finalizar
             }
-        }
-
-        function actualizarGenero(genero, subgenero) {
-            document.getElementById('genero').innerText = `${genero} (${subgenero})`;
         }
 
         // Evento para el botón de búsqueda de canción
@@ -330,6 +320,20 @@
             if (player && isPlayerReady) {
                 player.pauseVideo();
             }
+        });
+
+        // Evento para el botón de iniciar
+        document.getElementById('play').addEventListener('click', () => {
+            if (player && isPlayerReady) {
+                player.playVideo();
+            }
+        });
+
+        // Evento para el botón de siguiente
+        document.getElementById('next').addEventListener('click', async () => {
+            const { genero, subgenero } = generos[generoActual];
+            const videos = await buscarVideos(genero, subgenero);
+            reproducirVideoAleatorio(videos);
         });
 
         // Cargar lista de géneros al iniciar
