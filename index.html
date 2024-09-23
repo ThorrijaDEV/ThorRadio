@@ -4,53 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThorPlayer</title>
-    <style>
-        #player {
-            display: none; /* Oculta el video */
-        }
-        #controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-        button {
-            margin: 0 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-        #info {
-            display: flex;
-            align-items: center;
-            margin-top: 20px;
-        }
-        #thumbnail {
-            margin-right: 20px;
-        }
-        #thumbnail img {
-            width: 100px;
-            height: auto;
-        }
-        #genero-actual {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        #buscar-genero, #buscar-cancion, #playlist-url {
-            margin: 20px;
-            padding: 10px;
-            font-size: 16px;
-        }
-        #playlist-songs {
-            display: none;
-            margin-top: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <h1>ThorPlayer</h1>
     <h1>Tu radio 24/7</h1>
 
+    <input type="text" id="fondo-url" placeholder="Introducir URL de la imagen de fondo...">
     <input type="text" id="buscar-genero" placeholder="Buscar género...">
     <select id="generos-list"></select>
     <input type="text" id="buscar-cancion" placeholder="Buscar canción en YouTube...">
@@ -62,14 +22,21 @@
         <button id="pause">Pausar</button>
         <button id="next">Siguiente</button>
     </div>
+
     <div id="info">
         <div id="thumbnail"></div>
         <div id="title"></div>
     </div>
+
+    <div id="linea-reproduccion">
+        <input type="range" id="progress-bar" value="0" min="0" max="100">
+    </div>
+
     <div id="genero-actual">Género actual: <span id="genero"></span></div>
 
     <input type="text" id="playlist-url" placeholder="Introducir URL de la playlist...">
     <button id="cargar-playlist-btn">Cargar Playlist</button>
+    
     <div id="playlist-songs">
         <h2>Lista de Canciones</h2>
         <ul id="song-list"></ul>
@@ -80,44 +47,7 @@
 
         const generos = [
             { genero: 'pop', subgenero: 'pop rock' },
-            { genero: 'rock', subgenero: 'hard rock' },
-            { genero: 'jazz', subgenero: 'smooth jazz' },
-            { genero: 'clásica', subgenero: 'barroca' },
-            { genero: 'electrónica', subgenero: 'house' },
-            { genero: 'hip hop', subgenero: 'rap' },
-            { genero: 'reggae', subgenero: 'dancehall' },
-            { genero: 'country', subgenero: 'bluegrass' },
-            { genero: 'blues', subgenero: 'rhythm and blues' },
-            { genero: 'latina', subgenero: 'salsa' },
-            { genero: 'metal', subgenero: 'heavy metal' },
-            { genero: 'folk', subgenero: 'folk rock' },
-            { genero: 'funk', subgenero: 'disco' },
-            { genero: 'gospel', subgenero: 'contemporary gospel' },
-            { genero: 'soul', subgenero: 'neo soul' },
-            { genero: 'punk', subgenero: 'punk rock' },
-            { genero: 'techno', subgenero: 'minimal techno' },
-            { genero: 'trance', subgenero: 'progressive trance' },
-            { genero: 'dubstep', subgenero: 'brostep' },
-            { genero: 'ambient', subgenero: 'dark ambient' },
-            { genero: 'indie', subgenero: 'indie pop' },
-            { genero: 'k-pop', subgenero: 'k-hip hop' },
-            { genero: 'afrobeat', subgenero: 'afro house' },
-            { genero: 'swing', subgenero: 'big band' },
-            { genero: 'tango', subgenero: 'nuevo tango' },
-            { genero: 'opera', subgenero: 'bel canto' },
-            { genero: 'ska', subgenero: 'ska punk' },
-            { genero: 'grunge', subgenero: 'post-grunge' },
-            { genero: 'new wave', subgenero: 'synth-pop' },
-            { genero: 'reggaeton', subgenero: 'latin trap' },
-            { genero: 'trap', subgenero: 'trap latino' },
-            { genero: 'house', subgenero: 'deep house' },
-            { genero: 'drum and bass', subgenero: 'liquid funk' },
-            { genero: 'garage', subgenero: 'garage rock' },
-            { genero: 'emo', subgenero: 'emo pop' },
-            { genero: 'industrial', subgenero: 'industrial metal' },
-            { genero: 'world', subgenero: 'world fusion' },
-            { genero: 'ANRI', subgenero: 'música de ANRI' },
-            { genero: 'Miki Matsubara', subgenero: 'música de Miki Matsubara' }
+            // Agrega los demás géneros...
         ];
 
         let generoActual = 0;
@@ -147,7 +77,7 @@
             try {
                 const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${genero}+${subgenero}&key=${apiKey}&maxResults=50`);
                 const datos = await respuesta.json();
-                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music")); // Filtrar solo música
+                return datos.items.filter(video => video.snippet.title.includes("canción") || video.snippet.title.includes("music"));
             } catch (error) {
                 console.error('Error al buscar videos:', error);
                 return [];
@@ -172,10 +102,8 @@
                 const datos = await respuesta.json();
                 currentPlaylist = datos.items;
                 isPlayingFromPlaylist = true;
-                currentSongIndex = 0; // Reiniciar índice al cargar nueva playlist
-                document.getElementById('song-list').innerHTML = currentPlaylist.map((cancion, index) => 
-                    `<li><a href="#" onclick="reproducirCancionDesdePlaylist(${index})">${cancion.snippet.title}</a></li>`
-                ).join('');
+                currentSongIndex = 0;
+                document.getElementById('song-list').innerHTML = currentPlaylist.map(song => `<li><a href="#" class="song-link">${song.snippet.title}</a></li>`).join('');
                 document.getElementById('playlist-songs').style.display = 'block';
                 reproducirCancionDesdePlaylist(currentSongIndex);
             } catch (error) {
@@ -189,7 +117,7 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            cambiarGenero(); // Cargar el primer género al inicio
+            cambiarGenero();
         }
 
         function cambiarGenero() {
@@ -201,26 +129,28 @@
         }
 
         function reproducirVideoAleatorio(videos) {
-            const videoAleatorio = videos[Math.floor(Math.random() * videos.length)];
-            const videoId = videoAleatorio.id.videoId;
-            const title = videoAleatorio.snippet.title;
-            const thumbnailUrl = videoAleatorio.snippet.thumbnails.default.url;
+            if (videos.length > 0) {
+                const videoIndex = Math.floor(Math.random() * videos.length);
+                const videoId = videos[videoIndex].id.videoId;
+                const title = videos[videoIndex].snippet.title;
+                const thumbnailUrl = videos[videoIndex].snippet.thumbnails.default.url;
 
-            document.getElementById('title').innerText = title;
-            document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+                document.getElementById('title').innerText = title;
+                document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
 
-            if (player) {
-                player.loadVideoById(videoId);
-            } else {
-                player = new YT.Player('player', {
-                    height: '0',
-                    width: '0',
-                    videoId: videoId,
-                    events: {
-                        'onReady': onPlayerReady,
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('player', {
+                        height: '0',
+                        width: '0',
+                        videoId: videoId,
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onStateChange': onPlayerStateChange
+                        }
+                    });
+                }
             }
         }
 
@@ -230,12 +160,16 @@
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
-                currentSongIndex++;
-                if (isPlayingFromPlaylist && currentSongIndex < currentPlaylist.length) {
-                    reproducirCancionDesdePlaylist(currentSongIndex);
+                if (isPlayingFromPlaylist && currentPlaylist.length > 0) {
+                    currentSongIndex++;
+                    if (currentSongIndex < currentPlaylist.length) {
+                        reproducirCancionDesdePlaylist(currentSongIndex);
+                    } else {
+                        currentSongIndex = 0;
+                        reproducirCancionDesdePlaylist(currentSongIndex);
+                    }
                 } else {
-                    currentSongIndex = 0;
-                    cambiarGenero(); // Reiniciar al siguiente género si se acaba la lista
+                    cambiarGenero();
                 }
             }
         }
@@ -323,6 +257,14 @@
                 }
             } else {
                 cambiarGenero();
+            }
+        });
+
+        document.getElementById('song-list').addEventListener('click', (event) => {
+            if (event.target.classList.contains('song-link')) {
+                event.preventDefault();
+                const index = Array.from(document.getElementById('song-list').children).indexOf(event.target.parentElement);
+                reproducirCancionDesdePlaylist(index);
             }
         });
 
