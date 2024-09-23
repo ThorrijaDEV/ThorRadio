@@ -56,6 +56,7 @@
     <select id="generos-list"></select>
     <input type="text" id="buscar-cancion" placeholder="Buscar canción en YouTube...">
     <button id="buscar-cancion-btn">Buscar canción</button>
+    <button id="iniciar-radio-btn">Iniciar Radio</button> <!-- Botón para iniciar radio -->
 
     <div id="player"></div>
     <div id="controls">
@@ -125,6 +126,7 @@
         let currentPlaylist = [];
         let currentSongIndex = 0;
         let isPlayingFromPlaylist = false;
+        let isRadioPlaying = false; // Variable para controlar si la radio está activa
         let player;
 
         function cargarListaGeneros() {
@@ -190,11 +192,12 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            cargarListaGeneros(); // Cargar lista de géneros al inicio
+            cargarListaGeneros();
         }
 
         async function cambiarGenero() {
-            const { genero, subgenero } = generos[generoActual];
+            const genero = generos[generoActual].genero;
+            const subgenero = generos[generoActual].subgenero;
             const videos = await buscarVideos(genero, subgenero);
             reproducirVideoAleatorio(videos);
             document.getElementById('genero').innerText = `${genero} (${subgenero})`;
@@ -229,12 +232,24 @@
         }
 
         function onPlayerReady(event) {
-            event.target.playVideo();
+            if (isRadioPlaying) {
+                event.target.playVideo();
+            }
         }
 
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
-                cambiarGenero(); // Cambiar a un nuevo video del mismo género al terminar
+                if (isPlayingFromPlaylist) {
+                    currentSongIndex++;
+                    if (currentSongIndex < currentPlaylist.length) {
+                        reproducirCancionDesdePlaylist(currentSongIndex);
+                    } else {
+                        currentSongIndex = 0;
+                        reproducirCancionDesdePlaylist(currentSongIndex);
+                    }
+                } else if (isRadioPlaying) {
+                    cambiarGenero(); // Cambiar a un nuevo video del mismo género al terminar
+                }
             }
         }
 
@@ -319,8 +334,21 @@
                     currentSongIndex = 0;
                     reproducirCancionDesdePlaylist(currentSongIndex);
                 }
-            } else {
+            } else if (isRadioPlaying) {
                 cambiarGenero();
+            }
+        });
+
+        document.getElementById('iniciar-radio-btn').addEventListener('click', () => {
+            isRadioPlaying = !isRadioPlaying; // Alternar estado de la radio
+            if (isRadioPlaying) {
+                cambiarGenero(); // Iniciar radio con el género actual
+                document.getElementById('iniciar-radio-btn').innerText = 'Detener Radio';
+            } else {
+                if (player) {
+                    player.pauseVideo(); // Detener video si se está reproduciendo
+                }
+                document.getElementById('iniciar-radio-btn').innerText = 'Iniciar Radio';
             }
         });
 
