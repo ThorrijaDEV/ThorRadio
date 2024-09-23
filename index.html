@@ -36,10 +36,18 @@
             font-size: 18px;
             font-weight: bold;
         }
-        #buscar-genero, #buscar-cancion {
+        #buscar-genero, #buscar-cancion, #playlist-url {
             margin: 20px;
             padding: 10px;
             font-size: 16px;
+        }
+        #playlist-songs {
+            display: none; /* Oculta la lista de canciones hasta que se introduzca un enlace */
+            margin-top: 20px;
+        }
+        #song-list {
+            list-style: none;
+            padding: 0;
         }
     </style>
 </head>
@@ -56,6 +64,15 @@
     <!-- Buscador de canciones -->
     <input type="text" id="buscar-cancion" placeholder="Buscar canción en YouTube...">
     <button id="buscar-cancion-btn">Buscar canción</button>
+
+    <!-- Campo para URL de la playlist -->
+    <input type="text" id="playlist-url" placeholder="Introduce URL de la playlist de YouTube...">
+    <button id="cargar-playlist-btn">Cargar Playlist</button>
+
+    <div id="playlist-songs">
+        <h2>Canciones de la Playlist</h2>
+        <ul id="song-list"></ul>
+    </div>
 
     <div id="player"></div>
     <div id="controls">
@@ -112,7 +129,7 @@
             { genero: 'world', subgenero: 'world fusion' },
             { genero: 'ruso', subgenero: 'música soviética' },
             { genero: 'japonés', subgenero: 'música de los 80s y 90s' },
-            { genero: 'ANRI y Miki Matsubara', subgenero: 'música de ANRI y Miki Matsubara' } // Enfocado en sus canciones
+            { genero: 'ANRI y Miki Matsubara', subgenero: 'música de ANRI y Miki Matsubara' }
         ];
         let generoActual = 0;
         let isPlayerReady = false;
@@ -162,6 +179,19 @@
             } catch (error) {
                 console.error('Error al buscar la canción:', error);
                 return null;
+            }
+        }
+
+        // Función para cargar canciones desde una playlist
+        async function cargarPlaylist(url) {
+            const playlistId = url.split('list=')[1].split('&')[0]; // Extraer el ID de la playlist
+            try {
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${apiKey}&maxResults=50`);
+                const datos = await respuesta.json();
+                return datos.items;
+            } catch (error) {
+                console.error('Error al cargar la playlist:', error);
+                return [];
             }
         }
 
@@ -258,6 +288,40 @@
                 }
             } else {
                 alert('No se encontró ninguna canción.');
+            }
+        });
+
+        // Evento para el botón de cargar playlist
+        document.getElementById('cargar-playlist-btn').addEventListener('click', async () => {
+            const url = document.getElementById('playlist-url').value;
+            if (url) {
+                const canciones = await cargarPlaylist(url);
+                const songList = document.getElementById('song-list');
+                songList.innerHTML = ''; // Limpiar la lista de canciones
+                canciones.forEach(cancion => {
+                    const li = document.createElement('li');
+                    li.innerText = cancion.snippet.title;
+                    li.onclick = () => {
+                        const videoId = cancion.snippet.resourceId.videoId;
+                        if (player) {
+                            player.loadVideoById(videoId);
+                        } else {
+                            player = new YT.Player('player', {
+                                height: '0',
+                                width: '0',
+                                videoId: videoId,
+                                events: {
+                                    'onReady': onPlayerReady,
+                                    'onStateChange': onPlayerStateChange
+                                }
+                            });
+                        }
+                    };
+                    songList.appendChild(li);
+                });
+                document.getElementById('playlist-songs').style.display = 'block'; // Mostrar la lista de canciones
+            } else {
+                alert('Por favor, introduce una URL válida.');
             }
         });
 
