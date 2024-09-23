@@ -36,12 +36,7 @@
             font-size: 18px;
             font-weight: bold;
         }
-        #buscar {
-            margin: 20px;
-            padding: 10px;
-            font-size: 16px;
-        }
-        #generos-list {
+        #buscar-genero, #buscar-cancion {
             margin: 20px;
             padding: 10px;
             font-size: 16px;
@@ -52,11 +47,15 @@
     <h1>ThorPlayer</h1>
     <h1>Tu radio 24/7</h1>
 
-    <!-- Buscador -->
-    <input type="text" id="buscar" placeholder="Buscar género o canción...">
+    <!-- Buscador de géneros -->
+    <input type="text" id="buscar-genero" placeholder="Buscar género...">
     
     <!-- Lista de géneros -->
     <select id="generos-list"></select>
+
+    <!-- Buscador de canciones -->
+    <input type="text" id="buscar-cancion" placeholder="Buscar canción en YouTube...">
+    <button id="buscar-cancion-btn">Buscar canción</button>
 
     <div id="player"></div>
     <div id="controls">
@@ -143,6 +142,18 @@
             }
         }
 
+        // Función para buscar una canción específica en YouTube
+        async function buscarCancion(query) {
+            try {
+                const respuesta = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=1`);
+                const datos = await respuesta.json();
+                return datos.items.length > 0 ? datos.items[0] : null;
+            } catch (error) {
+                console.error('Error al buscar la canción:', error);
+                return null;
+            }
+        }
+
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -199,39 +210,40 @@
             }
         }
 
-        // Actualiza el elemento HTML con el género actual
         function actualizarGenero(genero, subgenero) {
             document.getElementById('genero').innerText = `${genero} (${subgenero})`;
         }
 
-        // Buscador de géneros
-        document.getElementById('buscar').addEventListener('input', (event) => {
-            const query = event.target.value.toLowerCase();
-            const lista = document.getElementById('generos-list');
-            lista.innerHTML = ''; // Limpiar la lista
-            generos.forEach((gen, index) => {
-                if (gen.genero.toLowerCase().includes(query) || gen.subgenero.toLowerCase().includes(query)) {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = `${gen.genero} (${gen.subgenero})`;
-                    lista.appendChild(option);
+        // Evento para el botón de búsqueda de canción
+        document.getElementById('buscar-cancion-btn').addEventListener('click', async () => {
+            const query = document.getElementById('buscar-cancion').value;
+            const cancion = await buscarCancion(query);
+            if (cancion) {
+                const videoId = cancion.id.videoId;
+                const title = cancion.snippet.title;
+                const thumbnailUrl = cancion.snippet.thumbnails.default.url;
+
+                document.getElementById('title').innerText = title;
+                document.getElementById('thumbnail').innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail">`;
+
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('player', {
+                        height: '0',
+                        width: '0',
+                        videoId: videoId,
+                        events: {
+                            'onStateChange': onPlayerStateChange
+                        }
+                    });
                 }
-            });
+            } else {
+                alert('No se encontró ninguna canción.');
+            }
         });
 
-        document.getElementById('play').addEventListener('click', () => {
-            player.playVideo();
-        });
-
-        document.getElementById('pause').addEventListener('click', () => {
-            player.pauseVideo();
-        });
-
-        document.getElementById('next').addEventListener('click', () => {
-            reproducirVideoAleatorio();
-        });
-
-        // Cargar lista de géneros al cargar la página
+        // Cargar lista de géneros al iniciar
         cargarListaGeneros();
     </script>
 </body>
